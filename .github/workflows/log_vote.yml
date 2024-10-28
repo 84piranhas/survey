@@ -1,0 +1,29 @@
+name: Log Vote
+
+on:
+  repository_dispatch:
+    types: [log_vote]
+
+jobs:
+  log_vote_job:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Log vote in votes.json
+      run: |
+        echo "$(jq ". += [\"${{ github.event.client_payload.vote }}\"]" votes.json)" > votes.json
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Commit and push vote
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add votes.json
+        git commit -m "Log vote"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

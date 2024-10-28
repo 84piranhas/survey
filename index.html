@@ -3,54 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Survey</title>
+    <title>Vote for Squares</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            color: #333;
+        }
+        .squares-container {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .square {
+            width: 50px;
+            height: 50px;
+            background-color: #ddd;
+            border: 2px solid #888;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
-    <h1>Vote for Your Favorite Square!</h1>
-    <div id="squares">
-        <button onclick="selectVote(1)">1</button>
-        <button onclick="selectVote(2)">2</button>
-        <button onclick="selectVote(3)">3</button>
-        <button onclick="selectVote(4)">4</button>
-        <button onclick="selectVote(5)">5</button>
-        <button onclick="selectVote(6)">6</button>
-    </div>
-    <button onclick="submitVote()">Submit Vote</button>
 
-    <script>
-        let selectedValue = null;
+<h1>Select Your Vote (1 to 6)</h1>
+<div class="squares-container">
+    <div class="square" data-value="1">1</div>
+    <div class="square" data-value="2">2</div>
+    <div class="square" data-value="3">3</div>
+    <div class="square" data-value="4">4</div>
+    <div class="square" data-value="5">5</div>
+    <div class="square" data-value="6">6</div>
+</div>
+<button onclick="submitVote()">Submit Vote</button>
 
-        function selectVote(value) {
-            selectedValue = value;
-            alert(`You selected: ${selectedValue}`);
+<script>
+    let selectedValue = null;
+
+    document.querySelectorAll('.square').forEach(square => {
+        square.addEventListener('click', () => {
+            document.querySelectorAll('.square').forEach(s => s.classList.remove('selected'));
+            square.classList.add('selected');
+            selectedValue = square.getAttribute('data-value');
+        });
+    });
+
+    async function submitVote() {
+        if (!selectedValue) {
+            alert('Please select a square before voting.');
+            return;
         }
 
-        async function submitVote() {
-            if (!selectedValue) {
-                alert('Please select a square before voting.');
-                return;
-            }
+        try {
+            const response = await fetch('http://localhost:3000/log-vote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ vote: parseInt(selectedValue) })
+            });
 
-            try {
-                const response = await fetch('http://localhost:3000/log-vote', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ vote: selectedValue })
-                });
-
-                const result = await response.json();
-                if (response.ok) {
-                    alert(result.message);
-                } else {
-                    alert(`Error: ${result.error}`);
-                }
-            } catch (error) {
-                console.error('Error logging vote:', error);
-                alert('There was an error logging your vote. Please try again.');
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message);
+            } else {
+                alert(`Error: ${result.error}`);
             }
+        } catch (error) {
+            console.error('Error logging vote:', error);
+            alert('There was an error logging your vote. Please try again.');
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>
+
